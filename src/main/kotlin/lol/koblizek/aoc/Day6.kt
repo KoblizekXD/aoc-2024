@@ -4,6 +4,59 @@ import lol.koblizek.aoc.util.readInput
 
 val types = listOf('<', '>', '^', 'v')
 
+enum class Direction(val char: Char) {
+    WEST('<'), EAST('>'), NORTH('^'), SOUTH('v');
+    
+    companion object {
+        fun fromChar(char: Char): Direction? {
+            return entries.find { it.char == char }
+        }
+    }
+    
+    fun turnRight(): Direction {
+        return when (this) {
+            WEST -> NORTH
+            NORTH -> EAST
+            EAST -> SOUTH
+            SOUTH -> WEST
+        }
+    }
+    fun turnLeft(): Direction {
+        return when (this) {
+            WEST -> SOUTH
+            SOUTH -> EAST
+            EAST -> NORTH
+            NORTH -> WEST
+        }
+    }
+    
+    // Returns the values to offset the current position by to move in the current direction
+    fun nextPos(): Pair<Int, Int> {
+        return when (this) {
+            WEST -> Pair(0, -1)
+            EAST -> Pair(0, 1)
+            NORTH -> Pair(-1, 0)
+            SOUTH -> Pair(1, 0)
+        }
+    }
+    fun prevPos(): Pair<Int, Int> {
+        return when (this) {
+            WEST -> Pair(0, 1)
+            EAST -> Pair(0, -1)
+            NORTH -> Pair(1, 0)
+            SOUTH -> Pair(-1, 0)
+        }
+    }
+    fun nextPos(y: Int, x: Int): Pair<Int, Int> {
+        val (dy, dx) = nextPos()
+        return Pair(y + dy, x + dx)
+    }
+    fun prevPos(y: Int, x: Int): Pair<Int, Int> {
+        val (dy, dx) = prevPos()
+        return Pair(y + dy, x + dx)
+    }
+}
+
 fun findPos(map: List<CharArray>): Pair<Int, Int> {
     map.forEachIndexed { y, arr ->
         arr.find { it in types }?.let { return Pair(y, arr.indexOf(it)) }
@@ -11,78 +64,38 @@ fun findPos(map: List<CharArray>): Pair<Int, Int> {
     return Pair(-1, -1)
 }
 
-fun move(map: List<CharArray>, pos: Pair<Int, Int>, placedBlockage: Pair<Int, Int> = Pair(-1, -1)): Boolean {
-    var (y, x) = pos
-    var type = map[y][x]
-    val mutableMap = map.toMutableList()
-    fun tryRotate(newMap: MutableList<CharArray>): Boolean {
-        type = when {
-            type == '<' && newMap[y - 1][x] != '#' -> '^'
-            type == '^' && newMap[y][x + 1] != '#' -> '>'
-            type == '>' && newMap[y + 1][x] != '#' -> 'v'
-            type == 'v' && newMap[y][x - 1] != '#' -> '<'
-            else -> return false
-        }
-        return true
-    }
-    fun tryMoveInDirection(newMap: MutableList<CharArray>, checkLoop: Boolean = false): Boolean {
-        when (type) {
-            '<' -> {
-                if (x != 0 && (newMap[y][x - 1] != '#' || placedBlockage.first == y && placedBlockage.second == x - 1)) {
-                    if (checkLoop && placedBlockage.first == y && placedBlockage.second == x - 1) return true
-                    newMap[y][x - 1] = '<'
-                    newMap[y][x] = 'X'
-                    x--
-                } else if (x == 0 || !tryRotate(newMap)) return false
-            }
-            '>' -> {
-                if (x + 1 != newMap[0].size && (newMap[y][x + 1] != '#' || placedBlockage.first == y && placedBlockage.second == x + 1)) {
-                    if (checkLoop && newMap[y][x] == 'X' && placedBlockage.first == y && placedBlockage.second == x + 1) return true
-                    newMap[y][x + 1] = '>'
-                    newMap[y][x] = 'X'
-                    x++
-                } else if (x + 1 == newMap[0].size || !tryRotate(newMap)) return false
-            }
-            '^' -> {
-                if (y != 0 && (newMap[y - 1][x] != '#' || placedBlockage.first == y - 1 && placedBlockage.second == x)) {
-                    if (checkLoop && newMap[y][x] == 'X' && placedBlockage.first == y - 1 && placedBlockage.second == x) return true
-                    newMap[y - 1][x] = '^'
-                    newMap[y][x] = 'X'
-                    y--
-                } else if (y == 0 || !tryRotate(newMap)) return false
-            }
-            'v' -> {
-                if (y + 1 != map.size && (newMap[y + 1][x] != '#' || placedBlockage.first == y + 1 && placedBlockage.second == x)) {
-                    if (checkLoop && newMap[y][x] == 'X' && placedBlockage.first == y + 1 && placedBlockage.second == x) return true
-                    newMap[y + 1][x] = 'v'
-                    newMap[y][x] = 'X'
-                    y++
-                } else if (y + 1 == map.size || !tryRotate(newMap)) return false
-            }
-        }
-        return tryMoveInDirection(newMap, checkLoop)
-    }
-    return tryMoveInDirection(mutableMap, true)
-}
-
 fun main() {
-    val input = readInput(6, true).map { it.toCharArray() }
+    val input = readInput(6, false).map { it.toCharArray() }.toMutableList()
     var sum = 0
-    input.forEachIndexed { i, it ->
-        for (j in 0 until it.size) {
-            var newMap = input.map { it.toTypedArray().toCharArray() }.toMutableList()
-            if (!types.contains(newMap[i][j]) && newMap[i][j] != '#' && newMap[i][j] != 'X')
-                newMap[i][j] = '#'
-            try {
-                if (move(newMap, findPos(input), Pair(i, j)))
-                    println("$i $j")
-            } catch (e: StackOverflowError) {
-                sum++
+    
+    input.forEachIndexed { i, arr -> 
+        arr.forEachIndexed { j, c -> 
+            val new = input.toMutableList().map { it.copyOf() }
+            var (y, x) = findPos(input)
+            var direction = Direction.fromChar(input[y][x])!!
+            val positions = mutableSetOf<Pair<Pair<Int, Int>, Direction>>()
+            var looping = false
+            if (c == '.') new[i][j] = '#'
+            while (true) {
+                new[y][x] = 'X'
+                val (dy, dx) = direction.nextPos()
+                y += dy
+                x += dx
+                if (y !in new.indices || x !in new[y].indices)
+                    break
+                if (new[y][x] == '#') {
+                    direction.prevPos().let { (dy, dx) -> y += dy; x += dx }
+                    direction = direction.turnRight()
+                    if (Pair(y, x) to direction in positions) {
+                        looping = true
+                        break
+                    }
+                    positions.add(Pair(y, x) to direction)
+                }
+                new[y][x] = direction.char
             }
+            if (looping) sum++
         }
     }
-//    move(input, findPos(input)).forEach {
-//        sum += it.count { types.contains(it) || it == 'X' }
-//    }
     println(sum)
 }
