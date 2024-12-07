@@ -1,49 +1,48 @@
 package lol.koblizek.aoc
 
 import lol.koblizek.aoc.util.readInput
-import java.math.BigInteger
+import kotlin.math.pow
 
-data class InputLine(val total: BigInteger, val nums: List<BigInteger>)
+data class InputLine(val total: Long, val nums: List<Long>)
 
 enum class Operation {
-    ADD, MULTIPLY
+    ADD, MULTIPLY, CONCAT
 }
 
 fun main() {
     val input = readInput(7, false).map { 
         var split = it.split(": ")
-        InputLine(split[0].toBigInteger(), split[1].split(" ").map { it.toBigInteger() })
+        InputLine(split[0].toLong(), split[1].split(" ").map { it.toLong() })
     }
     
-    var total: BigInteger = BigInteger.ZERO
+    var total: Long = 0
     input.forEach {
-        if (it.total == it.nums.reduce(BigInteger::add)) {
-            total = total.add(it.total)
+        if (it.total == it.nums.sum()) {
+            total += it.total
         } else {
-            for (combination in 0 until (1 shl (it.nums.size - 1))) {
+            val opSlots = it.nums.size - 1
+            var found = false
+            for (combination in 0 until (3.toDouble().pow(opSlots).toInt())) {
                 val operations = mutableListOf<Operation>()
-                var found = false
-                for (i in 0 until (it.nums.size - 1)) {
-                    if ((combination shr i) and 1 == 1) {
-                        operations.add(Operation.ADD)
-                    } else {
-                        operations.add(Operation.MULTIPLY)
-                    }
+                var temp = combination
+                for (i in 0 until opSlots) {
+                    operations.add(Operation.entries[temp % 3])
+                    temp /= 3
                 }
-                it.nums.reduceIndexed { i, acc, n -> 
-                    when (operations[i - 1]) {
-                        Operation.ADD -> acc + n
-                        Operation.MULTIPLY -> acc * n
+                operations.reverse()
+                it.nums.reduceIndexed { index, acc, num ->
+                    when (operations[index - 1]) {
+                        Operation.ADD -> acc + num
+                        Operation.MULTIPLY -> acc * num
+                        Operation.CONCAT -> (acc.toString() + num.toString()).toLong()
                     }
-                }.let { result ->
-                    if (result == it.total) {
-                        total += it.total
+                }.let { data ->
+                    if (data == it.total) {
+                        total += data
                         found = true
                     }
                 }
-                if (found) {
-                    break
-                }
+                if (found) break
             }
         }
     }
