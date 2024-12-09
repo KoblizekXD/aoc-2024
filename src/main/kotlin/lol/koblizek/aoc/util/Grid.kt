@@ -1,6 +1,5 @@
 package lol.koblizek.aoc.util
 
-import java.util.Objects
 import kotlin.math.abs
 
 data class Grid(val input: MutableList<CharArray>) {

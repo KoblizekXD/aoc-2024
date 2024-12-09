@@ -16,6 +16,7 @@ fun <V> getCombinations(map: List<V>): List<Pair<V, V>> {
 }
 
 fun Any.println() = println(this)
+fun Any.print() = print(this)
 
 data class Location(val x: Int, val y: Int) {
     operator fun plus(other: Location) = Location(x + other.x, y + other.y)
