@@ -17,6 +17,17 @@ data class Grid(val input: MutableList<CharArray>) {
     fun get(x: Int, y: Int): Char {
         return input[y][x]
     }
+    
+    fun getAll(predicate: (Char) -> Boolean): List<Point> {
+        val map = mutableListOf<Point>()
+        input.forEachIndexed { y, arr ->
+            arr.forEachIndexed { x, c ->
+                if (predicate(c))
+                    map.add(x pairedWith y)
+            }
+        }
+        return map
+    }
 
     fun getPoint(x: Int, y: Int): Point {
         return Point(x, y)
@@ -36,14 +47,23 @@ data class Grid(val input: MutableList<CharArray>) {
 
     fun getNeighbours(point: Point): List<Point> {
         return listOf(
-            Point(-1, -1), Point(0, -1), Point(1, -1),
+            Point(0, -1),
             Point(-1, 0), Point(1, 0),
-            Point(-1, 1), Point(0, 1), Point(1, 1)
+            Point(0, 1)
         ).map { point + it }.filter { it.x in 0 until input[0].size && it.y in 0 until input.size }
     }
     
     fun getNeighbouringChars(point: Point): List<Char> {
         return getNeighbours(point).map { getPoint(it) }
+    }
+    
+    fun getNeighbouringCharsWithPoints(point: Point): List<Pair<Point, Char>> {
+        return getNeighbours(point).map { it to getPoint(it) }
+    }
+    
+    fun getNeighbouringChars(point: Point, predicate: (Char) -> Boolean): List<Point> {
+        return getNeighbouringCharsWithPoints(point).filter { predicate(it.second) }
+            .map { it.first }
     }
     
     fun offset(point: Point, offset: Point): Point {
@@ -74,7 +94,7 @@ data class Grid(val input: MutableList<CharArray>) {
         }
 
         override fun hashCode(): Int {
-            var result = super.hashCode()
+            var result = 1
             result = 31 * result + x
             result = 31 * result + y
             return result

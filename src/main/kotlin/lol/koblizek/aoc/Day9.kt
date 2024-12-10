@@ -20,8 +20,6 @@ fun p1() {
     while (res.subList(0, res.indexOfLast { it.toIntOrNull() != null } + 1).any { it[0] == '.' }) {
         val replacingIndex = res.indexOfLast { it.toIntOrNull() != null }
         val number = res[replacingIndex]
-        /*val indexes = res.withIndex().filter { it.value[0] == '.' }.take(number.length).map { it.index }
-        indexes.forEachIndexed { i, index -> res[index] = number[i].toString() }*/
         res.indexOf(".").let { res[it] = number }
         res[replacingIndex] = "."
     }
@@ -82,7 +80,6 @@ fun p2() {
         .filter { it.isNotEmpty() }
         .toMutableList()
     val parts = findAllParts(res)
-    // println(res[94585])
     parts.reversed().forEachIndexed { _, pair -> 
         val length = pair.second - pair.first + 1
         findConsecutive(res.subList(0, pair.first), length).let {
@@ -94,7 +91,6 @@ fun p2() {
             }
         }
     }
-    res.printStrings()
     res.mapIndexedNotNull { i, it ->
         val index = it.toLongOrNull()
         if (index != null) index * i else null
