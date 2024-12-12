@@ -53,6 +53,14 @@ data class Grid(val input: MutableList<CharArray>) {
         ).map { point + it }.filter { it.x in 0 until input[0].size && it.y in 0 until input.size }
     }
     
+    fun forEach(action: (Point) -> Unit) {
+        input.forEachIndexed { y, arr ->
+            arr.forEachIndexed { x, _ ->
+                action(x pairedWith y)
+            }
+        }
+    }
+    
     fun getNeighbouringChars(point: Point): List<Char> {
         return getNeighbours(point).map { getPoint(it) }
     }
@@ -73,6 +81,8 @@ data class Grid(val input: MutableList<CharArray>) {
     operator fun contains(point: Point): Boolean {
         return point.x !in 0 until input[0].size || point.y !in 0 until input.size
     }
+    
+    operator fun get(point: Point) = getPoint(point)
     
     fun mirror(midpoint: Point, point: Point): Point {
         return Point(2 * midpoint.x - point.x, 2 * midpoint.y - point.y)
@@ -99,6 +109,22 @@ data class Grid(val input: MutableList<CharArray>) {
             result = 31 * result + y
             return result
         }
+        
+        fun validNeighbours(): List<Point> {
+            return listOf(
+                this + Point(0, -1),
+                this + Point(-1, 0), this + Point(1, 0),
+                this + Point(0, 1)
+            )
+        }
+        
+        fun validNeighbours3x3(): List<Point> {
+            return listOf(
+                this + Point(-1, -1), this + Point(0, -1), this + Point(1, -1),
+                this + Point(-1, 0), this, this + Point(1, 0),
+                this + Point(-1, 1), this + Point(0, 1), this + Point(1, 1)
+            )
+        }
     }
     
     fun copy(): Grid {
@@ -108,6 +134,14 @@ data class Grid(val input: MutableList<CharArray>) {
 
 infix fun Grid.Point.distanceTo(other: Grid.Point): Grid.Point {
     return abs(x - other.x) pairedWith abs(y - other.y)
+}
+
+infix fun Grid.Point.faces(other: List<Grid.Point>): Boolean {
+    return other.any { it.distance(this) == 1 }
+} 
+
+infix fun Grid.Point.distance(other: Grid.Point): Int {
+    return abs(x - other.x) + abs(y - other.y)
 }
 
 infix fun Int.pairedWith(other: Int): Grid.Point {
