@@ -65,6 +65,10 @@ data class Grid(val input: MutableList<CharArray>) {
         return getNeighbours(point).map { getPoint(it) }
     }
     
+    fun isOutOfBounds(point: Point): Boolean {
+        return point.x !in 0 until input[0].size || point.y !in 0 until input.size
+    }
+    
     fun getNeighbouringCharsWithPoints(point: Point): List<Pair<Point, Char>> {
         return getNeighbours(point).map { it to getPoint(it) }
     }
@@ -115,6 +119,14 @@ data class Grid(val input: MutableList<CharArray>) {
                 this + Point(0, -1),
                 this + Point(-1, 0), this + Point(1, 0),
                 this + Point(0, 1)
+            )
+        }
+        
+        fun neighboursClean(): List<Point> {
+            return listOf(
+                Point(0, -1),
+                Point(-1, 0), Point(1, 0),
+                Point(0, 1)
             )
         }
         
