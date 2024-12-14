@@ -5,10 +5,18 @@ import kotlin.math.abs
 data class Grid(val input: MutableList<CharArray>) {
     
     constructor(day: Int, example: Boolean = false) : this(readInput(day, example).map { it.toCharArray() }.toMutableList())
+    constructor(width: Int, height: Int) : this(MutableList(height) { 
+        CharArray(width) { '.' }
+    })
     
     fun print() {
         input.forEach { println(it.joinToString("")) }
     }
+    
+    val width: Int
+        get() = input[0].size
+    val height: Int
+        get() = input.size
     
     fun count(predicate: (Char) -> Boolean): Int {
         return input.sumOf { it.count(predicate) }
