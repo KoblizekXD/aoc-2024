@@ -29,6 +29,30 @@ fun getNewPosition(grid: Grid, input: Day14Input): Day14Input {
     return Day14Input(new, input.velocity)
 }
 
+fun hasTree(grid: Grid): Boolean {
+    return grid.input.any { it.joinToString("").contains("#########") }
+}
+
+fun p2(input: List<Day14Input>): Int {
+    var grid = Grid(WIDTH, HEIGHT)
+    var testInput = input.toMutableList()
+    testInput.forEach {
+        grid.set(it.position, '1')
+    }
+    var i = 1
+    while (!hasTree(grid)) {
+        val grid2 = Grid(WIDTH, HEIGHT)
+        testInput = testInput.map { getNewPosition(grid2, it) }.toMutableList()
+        testInput.forEach {
+            grid2.set(it.position, '#')
+        }
+        grid = grid2
+        i++
+    }
+    grid.print()
+    return i
+}
+
 fun main() {
     val input = readInput(14, false).map { 
         val split = it.split(" ")
@@ -37,11 +61,12 @@ fun main() {
         Day14Input(Grid.Point(first[0].toInt(), first[1].toInt()), 
             Grid.Point(second[0].toInt(), second[1].toInt()))
     }
+    p2(input).println()
     var testInput = input
     var grid = Grid(WIDTH, HEIGHT)
     val targetSeconds = 100
     testInput.forEach { 
-        grid.set(it.position, '1')
+        grid.set(it.position, '#')
     }
     for (i in 1..targetSeconds) {
         val grid2 = Grid(WIDTH, HEIGHT)
@@ -54,7 +79,7 @@ fun main() {
         // println()
     }
     
-    grid.print()
+    // grid.print()
     testInput.map { getQuadrant(it.position, grid) }
         .groupBy { it }
         .filter { it.key != Quadrant.UNKNOWN }
