@@ -4,7 +4,6 @@ import lol.koblizek.aoc.util.Grid
 import lol.koblizek.aoc.util.println
 import lol.koblizek.aoc.util.readInput
 import lol.koblizek.aoc.util.splitAtEmpty
-import java.io.File
 
 enum class Instruction(val ch: Char) {
     LEFT('<'), RIGHT('>'), UP('^'), DOWN('v');
@@ -79,65 +78,37 @@ Scenarios:
 */
 val boxesPositions = mutableListOf<Grid.Point>()
 var isFucked = false
-fun getBoxesAbove(grid: Grid, point: Grid.Point) {
-    if (grid[point + Instruction.UP.toPosition()] == '[') {
-        boxesPositions.add(point + Instruction.UP.toPosition())
-        getBoxesAbove(grid, point + Instruction.UP.toPosition())
-    } else if (grid[point + Instruction.UP.toPosition()] == ']') {
-        if (!boxesPositions.contains(point + Instruction.UP.toPosition() + Instruction.LEFT.toPosition())) {
-            boxesPositions.add(point + Instruction.UP.toPosition() + Instruction.LEFT.toPosition())
-            getBoxesAbove(grid, point + Instruction.UP.toPosition() + Instruction.LEFT.toPosition())
+fun getBoxes(grid: Grid, point: Grid.Point, instruction: Instruction) {
+    when {
+        grid[point + instruction.toPosition()] == '[' -> {
+            boxesPositions.add(point + instruction.toPosition())
+            getBoxes(grid, point + instruction.toPosition(), instruction)
         }
-        if (grid[point + Instruction.UP.toPosition() + Instruction.RIGHT.toPosition()] == '['
-            && !boxesPositions.contains(point + Instruction.UP.toPosition() + Instruction.RIGHT.toPosition())
-            && grid[point] != '@') {
-            boxesPositions.add(point + Instruction.UP.toPosition() + Instruction.RIGHT.toPosition())
-            getBoxesAbove(grid, point + Instruction.UP.toPosition() + Instruction.RIGHT.toPosition())
+        grid[point + instruction.toPosition()] == ']' -> {
+            if (!boxesPositions.contains(point + instruction.toPosition() + Instruction.LEFT.toPosition())) {
+                boxesPositions.add(point + instruction.toPosition() + Instruction.LEFT.toPosition())
+                getBoxes(grid, point + instruction.toPosition() + Instruction.LEFT.toPosition(), instruction)
+            }
+            if (grid[point + instruction.toPosition() + Instruction.RIGHT.toPosition()] == '['
+                && !boxesPositions.contains(point + instruction.toPosition() + Instruction.RIGHT.toPosition())
+                && grid[point] != '@') {
+                boxesPositions.add(point + instruction.toPosition() + Instruction.RIGHT.toPosition())
+                getBoxes(grid, point + instruction.toPosition() + Instruction.RIGHT.toPosition(), instruction)
+            }
         }
-    } else if (grid[point] != '@'
-        && grid[point + Instruction.RIGHT.toPosition() + Instruction.UP.toPosition()] == '[') {
-        boxesPositions.add(point + Instruction.RIGHT.toPosition() + Instruction.UP.toPosition())
-        getBoxesAbove(grid, point + Instruction.RIGHT.toPosition() + Instruction.UP.toPosition())
+        grid[point] != '@'
+                && grid[point + Instruction.RIGHT.toPosition() + instruction.toPosition()] == '[' -> {
+            boxesPositions.add(point + Instruction.RIGHT.toPosition() + instruction.toPosition())
+            getBoxes(grid, point + Instruction.RIGHT.toPosition() + instruction.toPosition(), instruction)
+        }
     }
 }
 
-fun getBoxesBelow(grid: Grid, point: Grid.Point) {
-    if (grid[point + Instruction.DOWN.toPosition()] == '[') {
-        boxesPositions.add(point + Instruction.DOWN.toPosition())
-        getBoxesBelow(grid, point + Instruction.DOWN.toPosition())
-    } else if (grid[point + Instruction.DOWN.toPosition()] == ']') {
-        if (!boxesPositions.contains(point + Instruction.DOWN.toPosition() + Instruction.LEFT.toPosition())) {
-            boxesPositions.add(point + Instruction.DOWN.toPosition() + Instruction.LEFT.toPosition())
-            getBoxesBelow(grid, point + Instruction.DOWN.toPosition() + Instruction.LEFT.toPosition())
-        }
-        if (grid[point + Instruction.DOWN.toPosition() + Instruction.RIGHT.toPosition()] == '['
-            && !boxesPositions.contains(point + Instruction.DOWN.toPosition() + Instruction.RIGHT.toPosition())
-            && grid[point] != '@') {
-            boxesPositions.add(point + Instruction.DOWN.toPosition() + Instruction.RIGHT.toPosition())
-            getBoxesBelow(grid, point + Instruction.DOWN.toPosition() + Instruction.RIGHT.toPosition())
-        }
-    } else if (grid[point] != '@'
-        && grid[point + Instruction.RIGHT.toPosition() + Instruction.DOWN.toPosition()] == '[') {
-        boxesPositions.add(point + Instruction.RIGHT.toPosition() + Instruction.DOWN.toPosition())
-        getBoxesBelow(grid, point + Instruction.RIGHT.toPosition() + Instruction.DOWN.toPosition())
-    }
-}
-
-fun determineIfTopFucked(grid: Grid) {
+fun determineIfFucked(grid: Grid, instruction: Instruction) {
     boxesPositions.map { 
         listOf(it, it + Instruction.RIGHT.toPosition())
     }.flatMap { it }.forEach {
-        if (grid[it + Instruction.UP.toPosition()] == '#') {
-            isFucked = true
-        }
-    }
-}
-
-fun determineIfBottomFucked(grid: Grid) {
-    boxesPositions.map {
-        listOf(it, it + Instruction.RIGHT.toPosition())
-    }.flatMap { it }.forEach {
-        if (grid[it + Instruction.DOWN.toPosition()] == '#') {
+        if (grid[it + instruction.toPosition()] == '#') {
             isFucked = true
         }
     }
@@ -145,74 +116,77 @@ fun determineIfBottomFucked(grid: Grid) {
 
 fun go2(grid: Grid, robot: Grid.Point, instruction: Instruction) {
     var tempRobot = robot
-    if (instruction == Instruction.LEFT || instruction == Instruction.RIGHT) {
-        val boxes = mutableListOf<Grid.Point>()
-        var canMove = false
-        while (true) {
-            tempRobot = tempRobot + instruction.toPosition()
-            val cell = grid[tempRobot]
-            if (cell == '#') {
-                break
-            } else if ("[]".contains(cell)) {
-                boxes.add(tempRobot)
-            } else {
-                canMove = true
-                break
+    when (instruction) {
+        Instruction.LEFT, Instruction.RIGHT -> {
+            val boxes = mutableListOf<Grid.Point>()
+            var canMove = false
+            while (true) {
+                tempRobot = tempRobot + instruction.toPosition()
+                val cell = grid[tempRobot]
+                if (cell == '#') {
+                    break
+                } else if ("[]".contains(cell)) {
+                    boxes.add(tempRobot)
+                } else {
+                    canMove = true
+                    break
+                }
+            }
+            if (canMove) {
+                boxes.asReversed().forEach {
+                    grid[it + instruction.toPosition()] = grid[it]
+                }
+                grid[robot] = '.'
+                grid[robot + instruction.toPosition()] = '@'
             }
         }
-        if (canMove) {
-            boxes.asReversed().forEach {
-                grid[it + instruction.toPosition()] = grid[it]
+        Instruction.UP -> {
+            getBoxes(grid, robot, instruction)
+            determineIfFucked(grid, instruction)
+            if (!isFucked && grid[robot + Instruction.UP.toPosition()] != '#') {
+                boxesPositions.forEach {
+                    grid[it] = '.'
+                    grid[it + Instruction.RIGHT.toPosition()] = '.'
+                }
+                boxesPositions.map { it + Instruction.UP.toPosition() }.forEach {
+                    grid[it] = '['
+                    grid[it + Instruction.RIGHT.toPosition()] = ']'
+                }
+                grid[robot] = '.'
+                if (grid[robot + Instruction.UP.toPosition()] == '[') {
+                    grid[robot + Instruction.UP.toPosition() + Instruction.RIGHT.toPosition()] = '.'
+                } else if (grid[robot + Instruction.UP.toPosition()] == ']') {
+                    grid[robot + Instruction.UP.toPosition() + Instruction.LEFT.toPosition()] = '.'
+                }
+                grid[robot + Instruction.UP.toPosition()] = '@'
             }
-            grid[robot] = '.'
-            grid[robot + instruction.toPosition()] = '@'
+            isFucked = false
+            boxesPositions.clear()
         }
-    } else if (instruction == Instruction.UP) {
-        getBoxesAbove(grid, robot)
-        determineIfTopFucked(grid)
-        if (!isFucked && grid[robot + Instruction.UP.toPosition()] != '#') {
-            boxesPositions.forEach { 
-                grid[it] = '.'
-                grid[it + Instruction.RIGHT.toPosition()] = '.'
+        Instruction.DOWN -> {
+            getBoxes(grid, robot, instruction)
+            determineIfFucked(grid, instruction)
+            if (!isFucked && grid[robot + Instruction.DOWN.toPosition()] != '#') {
+                boxesPositions.forEach {
+                    grid[it] = '.'
+                    grid[it + Instruction.RIGHT.toPosition()] = '.'
+                }
+                boxesPositions.map { it + Instruction.DOWN.toPosition() }.forEach {
+                    grid[it] = '['
+                    grid[it + Instruction.RIGHT.toPosition()] = ']'
+                }
+                grid[robot] = '.'
+                if (grid[robot + Instruction.DOWN.toPosition()] == '[') {
+                    grid[robot + Instruction.DOWN.toPosition() + Instruction.RIGHT.toPosition()] = '.'
+                } else if (grid[robot + Instruction.DOWN.toPosition()] == ']') {
+                    grid[robot + Instruction.DOWN.toPosition() + Instruction.LEFT.toPosition()] = '.'
+                }
+                grid[robot + Instruction.DOWN.toPosition()] = '@'
             }
-            boxesPositions.map { it + Instruction.UP.toPosition() }.forEach {
-                grid[it] = '['
-                grid[it + Instruction.RIGHT.toPosition()] = ']'
-            }
-            grid[robot] = '.'
-            if (grid[robot + Instruction.UP.toPosition()] == '[') {
-                grid[robot + Instruction.UP.toPosition() + Instruction.RIGHT.toPosition()] = '.'
-            } else if (grid[robot + Instruction.UP.toPosition()] == ']') {
-                grid[robot + Instruction.UP.toPosition() + Instruction.LEFT.toPosition()] = '.'
-            }
-            grid[robot + Instruction.UP.toPosition()] = '@'
+            isFucked = false
+            boxesPositions.clear()
         }
-        isFucked = false
-        boxesPositions.clear()
-    } else if (instruction == Instruction.DOWN) {
-        getBoxesBelow(grid, robot)
-        determineIfBottomFucked(grid)
-        if (!isFucked && grid[robot + Instruction.DOWN.toPosition()] != '#') {
-            boxesPositions.forEach {
-                grid[it] = '.'
-                grid[it + Instruction.RIGHT.toPosition()] = '.'
-            }
-            boxesPositions.map { it + Instruction.DOWN.toPosition() }.forEach {
-                grid[it] = '['
-                grid[it + Instruction.RIGHT.toPosition()] = ']'
-            }
-            grid[robot] = '.'
-            if (grid[robot + Instruction.DOWN.toPosition()] == '[') {
-                grid[robot + Instruction.DOWN.toPosition() + Instruction.RIGHT.toPosition()] = '.'
-            } else if (grid[robot + Instruction.DOWN.toPosition()] == ']') {
-                grid[robot + Instruction.DOWN.toPosition() + Instruction.LEFT.toPosition()] = '.'
-            }
-            grid[robot + Instruction.DOWN.toPosition()] = '@'
-        }
-        isFucked = false
-        boxesPositions.clear()
     }
-    println()
 }
 
 fun remapGrid(grid: Grid): Grid {
