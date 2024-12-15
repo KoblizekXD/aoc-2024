@@ -1,5 +1,6 @@
 package lol.koblizek.aoc.util
 
+import java.io.File
 import kotlin.math.abs
 
 data class Grid(val input: MutableList<CharArray>) {
@@ -11,6 +12,10 @@ data class Grid(val input: MutableList<CharArray>) {
     
     fun print() {
         input.forEach { println(it.joinToString("")) }
+    }
+    
+    fun appendTo(file: String) {
+        File(file).appendText(input.map { it.joinToString("") }.joinToString("\n") + "\n\n\n")
     }
     
     val width: Int
