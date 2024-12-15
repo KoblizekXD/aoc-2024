@@ -42,3 +42,8 @@ fun calculateOppositePoint(midpoint: Pair<Int, Int>, pointB: Pair<Int, Int>): Pa
     val cy = 2 * midpoint.second - pointB.second
     return Pair(cx, cy)
 }
+
+fun List<String>.splitAtEmpty(): Pair<List<String>, List<String>> {
+    val index = indexOf("")
+    return Pair(subList(0, index), subList(index + 1, size))
+}

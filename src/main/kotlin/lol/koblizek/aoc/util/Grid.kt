@@ -49,7 +49,7 @@ data class Grid(val input: MutableList<CharArray>) {
         input[y][x] = value
     }
     
-    fun set(point: Point, value: Char) {
+    operator fun set(point: Point, value: Char) {
         set(point.x, point.y, value)
     }
 
@@ -149,6 +149,27 @@ data class Grid(val input: MutableList<CharArray>) {
     
     fun copy(): Grid {
         return Grid(input.map { it.copyOf() }.toMutableList())
+    }
+    
+    fun find(predicate: (Char) -> Boolean): Point? {
+        input.forEachIndexed { y, arr ->
+            arr.forEachIndexed { x, c ->
+                if (predicate(c))
+                    return Point(x, y)
+            }
+        }
+        return null
+    }
+    
+    fun findAll(predicate: (Char) -> Boolean): List<Point> {
+        val res = mutableListOf<Point>()
+        input.forEachIndexed { y, arr ->
+            arr.forEachIndexed { x, c ->
+                if (predicate(c))
+                    res.add(Point(x, y))
+            }
+        }
+        return res
     }
 }
 
