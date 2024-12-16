@@ -1,5 +1,6 @@
 package lol.koblizek.aoc.util
 
+import lol.koblizek.aoc.util.Grid.Point
 import java.io.File
 import kotlin.math.abs
 
@@ -105,7 +106,7 @@ data class Grid(val input: MutableList<CharArray>) {
         return Point(2 * midpoint.x - point.x, 2 * midpoint.y - point.y)
     }
     
-    data class Point(val x: Int, val y: Int) {
+    data class Point(val x: Int, val y: Int): Comparable<Point> {
         operator fun plus(other: Point) = Point(x + other.x, y + other.y)
         operator fun minus(other: Point) = Point(x - other.x, y - other.y)
         operator fun times(other: Int) = Point(x * other, y * other)
@@ -150,6 +151,10 @@ data class Grid(val input: MutableList<CharArray>) {
                 this + Point(-1, 1), this + Point(0, 1), this + Point(1, 1)
             )
         }
+
+        override fun compareTo(other: Point): Int {
+            return compareValuesBy(this, other, Point::x, Point::y)
+        }
     }
     
     fun copy(): Grid {
@@ -192,4 +197,35 @@ infix fun Grid.Point.distance(other: Grid.Point): Int {
 
 infix fun Int.pairedWith(other: Int): Grid.Point {
     return Grid.Point(this, other)
+}
+
+enum class Direction(val angle: Int) {
+    NORTH(0), EAST(90), SOUTH(180), WEST(270);
+    
+    operator fun plus(other: Direction) = Direction.of((angle + other.angle) % 360)
+    operator fun minus(other: Direction) = Direction.of((angle - other.angle) % 360)
+    
+    fun toPoint(): Point {
+        return when (this) {
+            NORTH -> Point(0, -1)
+            EAST -> Point(1, 0)
+            SOUTH -> Point(0, 1)
+            WEST -> Point(-1, 0)
+        }
+    }
+
+    operator fun component1() = this.toPoint().x
+    operator fun component2() = this.toPoint().y
+
+    companion object {
+        fun of(angle: Int): Direction {
+            return when ((angle + 720) % 360) {
+                0 -> NORTH
+                90 -> EAST
+                180 -> SOUTH
+                270 -> WEST
+                else -> throw IllegalArgumentException("Invalid rotation: $angle")
+            }
+        }
+    }
 }
