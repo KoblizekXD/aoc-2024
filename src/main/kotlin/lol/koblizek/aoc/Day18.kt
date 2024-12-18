@@ -19,7 +19,6 @@ fun bfs(grid: Grid): Int {
         val neighbors = grid.getNeighbours(current)
         
         if (current == end) {
-            println(weight)
             return weight
         }
         
@@ -36,10 +35,13 @@ fun bfs(grid: Grid): Int {
 fun main() {
     val pairs = readInput(18, false).map { it.split(",") }.map { it[0].toInt() to it[1].toInt() }
     val grid = Grid(71, 71)
-    
-    pairs.subList(0, 1024).forEach {
+
+    for (it in pairs) {
         grid[Grid.Point(it.first, it.second)] = '#'
+        val res = bfs(grid)
+        if (res == -1) {
+            println(it)
+            break
+        }
     }
-    grid.print()
-    bfs(grid)
 }
