@@ -47,3 +47,14 @@ fun List<String>.splitAtEmpty(): Pair<List<String>, List<String>> {
     val index = indexOf("")
     return Pair(subList(0, index), subList(index + 1, size))
 }
+
+fun splitNumber(number: Long, splitBy: Long): List<Pair<Long, Long>> {
+    val list = mutableListOf<Pair<Long, Long>>()
+    var temp = 0L
+    var by = number / splitBy
+    for (i in 0 until splitBy) {
+        list.add(Pair(temp, temp + by - 1))
+        temp += by
+    }
+    return list
+}
