@@ -16,11 +16,11 @@ class Trie {
         node.isEnd = true
     }
     
-    fun search(word: String, start: Int = 0): MutableList<Int> {
-        var result = mutableListOf<Int>()
+    fun search(word: String, start: Long = 0): MutableList<Long> {
+        var result = mutableListOf<Long>()
         var node = root
         for (i in start until word.length) {
-            val char = word[i]
+            val char = word[i.toInt()]
             if (char !in node.children) break
             node = node.children[char]!!
             if (node.isEnd) {
@@ -30,11 +30,11 @@ class Trie {
         return result
     }
     
-    fun countWays(design: String, memo: MutableMap<Int, Int>, start: Int = 0): Int {
+    fun countWays(design: String, memo: MutableMap<Long, Long>, start: Long = 0): Long {
         if (memo.containsKey(start)) {
             return memo[start]!!
         }
-        if (start == design.length) {
+        if (start == design.length.toLong()) {
             return 1
         }
         val matching = search(design, start)
