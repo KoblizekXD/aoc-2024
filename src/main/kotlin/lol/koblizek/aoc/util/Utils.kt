@@ -58,3 +58,15 @@ fun splitNumber(number: Long, splitBy: Long): List<Pair<Long, Long>> {
     }
     return list
 }
+
+fun <K, V> MutableMap<K, MutableList<V>>.putOrUpdate(key: K, value: V) {
+    if (containsKey(key)) {
+        get(key)!!.add(value)
+    } else {
+        put(key, mutableListOf(value))
+    }
+}
+
+fun <T> Collection<List<T>>.transpose(): List<List<T>> {
+    return (0 until first().size).map { col -> map { it[col] } }
+}
